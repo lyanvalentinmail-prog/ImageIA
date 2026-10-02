@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ImageIA · Generador de imágenes con IA</title>
+  <meta name="description" content="Interfaz web para generar imágenes con IA: prompts, estilos, seed, steps, CFG, galería y favoritos. Lista para conectar tu propia API de generación.">
+  <meta name="theme-color" content="#0b0d12">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath d='M32 12l4.5 12.5L49 29l-12.5 4.5L32 46l-4.5-12.5L15 29l12.5-4.5z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ══════════════ Barra superior ══════════════ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-logo" aria-hidden="true"><span data-icon="sparkles"></span></span>
+      ImageIA
+      <span class="badge">beta</span>
+    </div>
+
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab" id="tab-create" aria-selected="true">
+        <span data-icon="brush"></span><span class="tab-label">Crear</span>
+      </button>
+      <button class="tab" id="tab-gallery" aria-selected="false">
+        <span data-icon="clock"></span><span class="tab-label">Galería</span>
+      </button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-open-settings" title="Ajustes de API" aria-label="Ajustes de API">
+        <span data-icon="sliders"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ══════════════ Vista: Crear ══════════════ -->
+    <section class="view view-create" id="view-create">
+
+      <!-- ───── Panel de controles ───── -->
+      <aside class="panel controls" aria-label="Controles de generación">
+
+        <!-- Prompt -->
+        <div class="panel-section">
+          <div class="section-head">
+            <label class="section-title" for="input-prompt">Prompt</label>
+            <div class="prompt-tools">
+              <button class="icon-btn" id="btn-random-prompt" title="Prompt aleatorio" aria-label="Prompt aleatorio"><span data-icon="dice"></span></button>
+              <button class="icon-btn" id="btn-enhance-prompt" title="Mejorar prompt" aria-label="Mejorar prompt"><span data-icon="wand"></span></button>
+              <button class="icon-btn" id="btn-clear-prompt" title="Limpiar prompt" aria-label="Limpiar prompt"><span data-icon="x"></span></button>
+            </div>
+          </div>
+          <textarea id="input-prompt" rows="4" placeholder="Describe la imagen que quieres crear…&#10;Ej: un gato samurái en un jardín japonés al atardecer, iluminación dorada&#10;(Ctrl+Enter para generar)"></textarea>
+        </div>
+
+        <!-- Prompt negativo -->
+        <div class="panel-section" id="negative-field">
+          <label class="field-label" for="input-negative">
+            Prompt negativo <span class="hint" id="negative-hint"></span>
+          </label>
+          <textarea id="input-negative" rows="2" placeholder="Qué NO quieres ver: borroso, manos deformes, texto, marcas de agua…"></textarea>
+        </div>
+
+        <!-- Imagen de referencia -->
+        <div class="panel-section">
+          <div class="section-head">
+            <span class="section-title">Imagen de referencia</span>
+          </div>
+          <div class="dropzone" id="ref-dropzone" tabindex="0" role="button" aria-label="Subir imagen de referencia">
+            <span class="dz-icon" data-icon="upload"></span>
+            <span class="dz-main">Arrastra una imagen o haz clic para subirla</span>
+            <small>PNG · JPG · WEBP — se usará como base (img2img)</small>
+          </div>
+          <input type="file" id="ref-input" accept="image/*" hidden>
+          <div class="ref-preview hidden" id="ref-preview">
+            <img id="ref-img" alt="Imagen de referencia">
+            <div class="ref-info">
+              <span id="ref-name"></span>
+              <span id="ref-size"></span>
+            </div>
+            <button class="icon-btn danger" id="btn-remove-ref" title="Quitar referencia" aria-label="Quitar referencia"><span data-icon="trash"></span></button>
+          </div>
+          <p class="hint" id="ref-hint">Opcional: se usará como base si el modelo lo admite.</p>
+        </div>
+
+        <!-- Estilos -->
+        <div class="panel-section">
+          <span class="section-title">Estilo</span>
+          <div class="chips" id="style-chips" role="group" aria-label="Estilo visual"></div>
+        </div>
+
+        <!-- Modelo -->
+        <div class="panel-section">
+          <label class="field-label" for="select-model">Modelo</label>
+          <select id="select-model"></select>
+          <p class="hint" id="model-caps"></p>
+        </div>
+
+        <!-- Formato -->
+        <div class="panel-section">
+          <span class="section-title">Formato</span>
+          <div class="seg seg-ratio" id="ratio-group" role="group" aria-label="Relación de aspecto">
+            <button type="button" data-value="1:1" class="active"><i class="rbox" style="--rw:1;--rh:1" aria-hidden="true"></i>1:1</button>
+            <button type="button" data-value="16:9"><i class="rbox" style="--rw:1.6;--rh:0.9" aria-hidden="true"></i>16:9</button>
+            <button type="button" data-value="9:16"><i class="rbox" style="--rw:0.9;--rh:1.6" aria-hidden="true"></i>9:16</button>
+            <button type="button" data-value="4:3"><i class="rbox" style="--rw:1.3;--rh:1" aria-hidden="true"></i>4:3</button>
+            <button type="button" data-value="3:4"><i class="rbox" style="--rw:1;--rh:1.3" aria-hidden="true"></i>3:4</button>
+          </div>
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field">
+              <label class="field-label" for="select-quality">Resolución</label>
+              <select id="select-quality">
+                <option value="512">512 · Rápida</option>
+                <option value="768">768 · Equilibrada</option>
+                <option value="1024" selected>1024 · Alta</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">Cantidad</span>
+              <div class="seg" id="qty-group" role="group" aria-label="Cantidad de imágenes">
+                <button type="button" data-value="1" class="active">1</button>
+                <button type="button" data-value="2">2</button>
+                <button type="button" data-value="3">3</button>
+                <button type="button" data-value="4">4</button>
+              </div>
+            </div>
+          </div>
+          <p class="hint" id="dims-label">1024 × 1024 px</p>
+        </div>
+
+        <!-- Ajustes avanzados -->
+        <details class="panel-section advanced" id="advanced">
+          <summary>Ajustes avanzados</summary>
+          <div class="advanced-body">
+
+            <div class="field">
+              <label class="field-label" for="input-seed">Semilla (seed)</label>
+              <div class="seed-row">
+                <input type="number" id="input-seed" min="0" max="2147483647" step="1" placeholder="aleatoria" disabled>
+                <button class="icon-btn" id="btn-seed-dice" title="Nueva semilla aleatoria" aria-label="Nueva semilla aleatoria"><span data-icon="dice"></span></button>
+                <button class="icon-btn" id="btn-seed-lock" title="Semilla aleatoria (clic para fijar)" aria-label="Alternar semilla fija"><span data-icon="unlock"></span></button>
+              </div>
+              <p class="hint" id="seed-hint">La misma semilla reproduce la misma imagen.</p>
+            </div>
+
+            <div class="field" id="steps-block">
+              <div class="slider-head">
+                <label class="field-label" for="slider-steps">Steps</label>
+                <output id="steps-value">25</output>
+              </div>
+              <input type="range" id="slider-steps" min="1" max="50" step="1" value="25">
+              <p class="hint" id="steps-hint">Más steps = más detalle (y más lento).</p>
+            </div>
+
+            <div class="field" id="cfg-block">
+              <div class="slider-head">
+                <label class="field-label" for="slider-cfg">CFG</label>
+                <output id="cfg-value">7</output>
+              </div>
+              <input type="range" id="slider-cfg" min="1" max="20" step="0.5" value="7">
+              <p class="hint" id="cfg-hint">Cuánto se sigue el prompt (mayor = más estricto).</p>
+            </div>
+
+          </div>
+        </details>
+
+        <!-- Generar -->
+        <div class="genbar-panel">
+          <button class="btn btn-primary btn-lg" id="btn-generate"><span data-icon="zap"></span><span>Generar</span></button>
+          <button class="btn btn-danger hidden" id="btn-cancel"><span data-icon="close"></span><span>Cancelar</span></button>
+          <div class="gen-status" id="gen-status" aria-live="polite"><span>Listo para generar</span></div>
+        </div>
+
+        <p class="provider-line">
+          <span>Proveedor: <span class="pv-name" id="provider-name">Demo local</span></span>
+          <button class="link-btn" id="btn-config-provider">Configurar API</button>
+        </p>
+      </aside>
+
+      <!-- ───── Resultados ───── -->
+      <section class="results" aria-label="Resultados">
+        <div class="results-head">
+          <h2>Resultados</h2>
+          <span class="results-count" id="results-count"></span>
+          <span class="spacer"></span>
+        </div>
+
+        <div class="img-grid" id="results-grid"></div>
+
+        <div class="empty" id="results-empty">
+          <span class="empty-icon" aria-hidden="true">🪄</span>
+          <h3>Tus imágenes aparecerán aquí</h3>
+          <p>Escribe un prompt, elige un estilo y pulsa <strong>Generar</strong>. Prueba el dado 🎲 para un prompt aleatorio o la varita ✨ para mejorarlo.</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ══════════════ Vista: Galería / Historial ══════════════ -->
+    <section class="view view-gallery hidden" id="view-gallery" aria-label="Galería e historial">
+      <div class="gallery-head">
+        <h2>Galería e historial</h2>
+        <div class="gallery-toolbar">
+          <div class="search-box">
+            <span data-icon="search"></span>
+            <input type="text" id="gallery-search" placeholder="Buscar por prompt…" autocomplete="off">
+          </div>
+          <select id="gallery-filter" aria-label="Filtro de galería">
+            <option value="all">Todas</option>
+            <option value="fav">⭐ Favoritas</option>
+          </select>
+          <span class="gallery-count" id="gallery-count"></span>
+          <button class="btn btn-danger" id="btn-clear-gallery" style="margin-left:auto;"><span data-icon="trash"></span><span>Vaciar</span></button>
+        </div>
+      </div>
+
+      <div class="masonry" id="gallery-grid"></div>
+
+      <div class="empty hidden" id="gallery-empty">
+        <span class="empty-icon" aria-hidden="true">🖼️</span>
+        <h3>Tu galería está vacía</h3>
+        <p>Las imágenes que generes aparecerán aquí, junto a todo su historial y ajustes.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ══════════════ Barra de generación (móvil) ══════════════ -->
+  <div class="mobile-genbar">
+    <button class="btn btn-primary btn-lg" id="mob-generate"><span data-icon="zap"></span><span>Generar</span></button>
+    <button class="btn btn-danger hidden" id="mob-cancel"><span data-icon="close"></span><span>Cancelar</span></button>
+  </div>
+
+  <footer class="app-footer">
+    ImageIA · Interfaz de generación de imágenes con IA · Por defecto usa un <strong>generador demo local</strong> (ninguna imagen sale de tu dispositivo)
+    · Conecta una API real en <strong>⚙ Ajustes</strong> · HTML + CSS + JS, lista para GitHub Pages
+  </footer>
+
+  <!-- ══════════════ Modal: imagen ══════════════ -->
+  <div class="modal hidden" id="modal-image" role="dialog" aria-modal="true" aria-label="Detalles de la imagen">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card modal-image">
+      <button class="icon-btn modal-close" data-close title="Cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+      <div class="image-modal-body">
+        <div class="img-wrap"><img id="im-img" alt="Imagen generada"></div>
+        <div class="img-side">
+          <h3>Detalles</h3>
+
+          <div class="prompt-box">
+            <div class="pb-head">
+              <span class="field-label">Prompt</span>
+              <button class="icon-btn" id="im-copy" title="Copiar prompt" aria-label="Copiar prompt"><span data-icon="copy"></span></button>
+            </div>
+            <p id="im-prompt"></p>
+          </div>
+
+          <div class="prompt-box neg hidden" id="im-negative-box">
+            <span class="field-label">Prompt negativo</span>
+            <p id="im-negative"></p>
+          </div>
+
+          <dl class="meta-grid" id="im-meta"></dl>
+
+          <div class="modal-actions">
+            <button class="btn" id="im-download"><span data-icon="download"></span><span>Descargar</span></button>
+            <button class="btn" id="im-favorite"><span data-icon="heart"></span><span>Favorito</span></button>
+            <button class="btn" id="im-variations"><span data-icon="grid"></span><span>Variaciones</span></button>
+            <button class="btn" id="im-regenerate"><span data-icon="refresh"></span><span>Regenerar</span></button>
+            <button class="btn" id="im-remix"><span data-icon="shuffle"></span><span>Remix</span></button>
+            <button class="btn" id="im-reference"><span data-icon="image"></span><span>Usar como referencia</span></button>
+            <button class="btn btn-danger" id="im-delete"><span data-icon="trash"></span><span>Eliminar</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ Modal: ajustes de API ══════════════ -->
+  <div class="modal hidden" id="modal-settings" role="dialog" aria-modal="true" aria-label="Ajustes de API">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <button class="icon-btn modal-close" data-close title="Cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
+      <h3>⚙ Ajustes de generación</h3>
+
+      <div class="settings-body">
+        <div class="field">
+          <label class="field-label" for="select-provider">Proveedor de imágenes</label>
+          <select id="select-provider">
+            <option value="demo">🧪 Demo local (sin API, sin conexión)</option>
+            <option value="pollinations">🌐 Pollinations.ai (API real y gratuita)</option>
+            <option value="custom">🔌 API personalizada (REST)</option>
+          </select>
+        </div>
+
+        <div class="provider-note" id="fs-demo">
+          El <strong>modo demo</strong> genera imágenes abstractas directamente en tu navegador con canvas.
+          Es perfecto para probar la interfaz: respeta seed, steps y CFG, y no necesita ninguna API.
+          Cambia de proveedor cuando quieras conectar un servicio real.
+        </div>
+
+        <div class="provider-note hidden" id="fs-pollinations">
+          <strong>Pollinations.ai</strong> es una API pública, gratuita y sin clave. Tus prompts se envían a
+          pollinations.ai para generar las imágenes (puede haber límites de velocidad).
+          Admite prompt, tamaño y seed; no admite steps, CFG, prompt negativo ni imagen de referencia.
+          Modelos habituales: <code>flux</code> (calidad) y <code>turbo</code> (rápido).
+        </div>
+
+        <div class="hidden" id="fs-custom">
+          <div class="provider-note">
+            Conecta tu propia API: se envía un <strong>POST JSON</strong> con
+            <code>prompt, negative_prompt, width, height, seed, steps, cfg_scale, model</code>
+            y se espera una imagen (base64 en JSON, formato OpenAI o binaria).
+            Si tu API usa otros campos, adapta <code>buildCustomPayload()</code> en <code>js/providers.js</code>.
+          </div>
+
+          <div class="settings-grid">
+            <div class="field full">
+              <label class="field-label" for="input-api-url">URL del endpoint (POST)</label>
+              <input type="url" id="input-api-url" placeholder="https://tu-api.com/generar">
+            </div>
+            <div class="field full">
+              <label class="field-label" for="input-api-auth">Cabecera Authorization (opcional)</label>
+              <input type="text" id="input-api-auth" placeholder="Bearer sk-… (se guarda solo en tu navegador)" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field-label" for="select-api-format">Formato de respuesta</label>
+              <select id="select-api-format">
+                <option value="json">JSON con base64 (campo configurable)</option>
+                <option value="openai">Formato OpenAI Images (data[].b64_json)</option>
+                <option value="binary">Binario (image/png…)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="input-json-field">Campo JSON de la imagen</label>
+              <input type="text" id="input-json-field" placeholder="image" value="image">
+            </div>
+            <div class="field full">
+              <label class="field-label" for="input-models">Modelos (separados por comas)</label>
+              <input type="text" id="input-models" placeholder="stable-diffusion, sdxl-turbo">
+            </div>
+          </div>
+
+          <span class="field-label">El modelo admite:</span>
+          <div class="check-grid">
+            <label><input type="checkbox" id="chk-seed" checked> Seed</label>
+            <label><input type="checkbox" id="chk-steps" checked> Steps</label>
+            <label><input type="checkbox" id="chk-cfg" checked> CFG</label>
+            <label><input type="checkbox" id="chk-negative" checked> Prompt negativo</label>
+            <label><input type="checkbox" id="chk-reference"> Imagen de referencia</label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn" data-close>Cancelar</button>
+          <button class="btn btn-primary" id="btn-save-settings"><span data-icon="check"></span><span>Guardar</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ Modal: confirmación ══════════════ -->
+  <div class="modal hidden" id="modal-confirm" role="dialog" aria-modal="true" aria-label="Confirmación">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="width:min(100%,420px);">
+      <h3>¿Estás seguro?</h3>
+      <div class="confirm-body">
+        <p id="cf-text"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="cf-cancel">Cancelar</button>
+        <button class="btn btn-danger" id="cf-ok">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-root" id="toast-root" aria-live="polite"></div>
+
+  <noscript>
+    <p style="text-align:center;padding:40px;font-family:sans-serif">
+      ImageIA necesita JavaScript para funcionar. Actívalo en tu navegador.
+    </p>
+  </noscript>
+
+  <script src="js/utils.js"></script>
+  <script src="js/prompts.js"></script>
+  <script src="js/demo-generator.js"></script>
+  <script src="js/providers.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
