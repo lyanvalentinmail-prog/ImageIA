@@ -61,7 +61,7 @@
       'gallery-grid', 'gallery-empty',
       'modal-image', 'im-img', 'im-prompt', 'im-negative-box', 'im-negative', 'im-meta',
       'im-download', 'im-favorite', 'im-copy', 'im-variations', 'im-regenerate',
-      'im-remix', 'im-reference', 'im-delete',
+      'im-remix', 'im-reference', 'im-copy-settings', 'im-delete',
       'modal-settings', 'select-provider', 'fs-demo', 'fs-pollinations', 'fs-custom',
       'input-api-url', 'input-api-auth', 'select-api-format', 'input-json-field',
       'input-models', 'chk-seed', 'chk-steps', 'chk-cfg', 'chk-negative', 'chk-reference',
@@ -267,6 +267,25 @@
     els['im-reference'].addEventListener('click', function () {
       if (!state.modalRec) return;
       setReferenceFromRecord(state.modalRec);
+    });
+    els['im-copy-settings'].addEventListener('click', function () {
+      if (!state.modalRec) return;
+      const r = state.modalRec;
+      const payload = {
+        prompt: r.promptFull || r.prompt,
+        negative_prompt: r.negativeFull || '',
+        model: r.model,
+        width: r.width,
+        height: r.height,
+        seed: r.seed,
+        steps: r.steps,
+        cfg: r.cfg,
+        estilo: r.styleLabel,
+        proveedor: r.providerLabel
+      };
+      copyText(JSON.stringify(payload, null, 2)).then(function (ok) {
+        toast(ok ? 'Ajustes copiados como JSON' : 'No se pudo copiar', ok ? 'ok' : 'err');
+      });
     });
     els['im-delete'].addEventListener('click', function () {
       if (state.modalRec) deleteRecord(state.modalRec);
@@ -1056,6 +1075,8 @@
 
     syncFavoriteBtn();
     els['modal-image'].classList.remove('hidden');
+    const imCard = els['modal-image'].querySelector('.modal-card');
+    if (imCard) imCard.focus({ preventScroll: true });
   }
 
   function syncFavoriteBtn() {
@@ -1089,6 +1110,8 @@
     els['chk-reference'].checked = !!c.caps.reference;
 
     els['modal-settings'].classList.remove('hidden');
+    const setCard = els['modal-settings'].querySelector('.modal-card');
+    if (setCard) setCard.focus({ preventScroll: true });
   }
 
   async function saveSettings() {

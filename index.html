@@ -19,11 +19,11 @@
       <span class="badge">beta</span>
     </div>
 
-    <nav class="tabs" aria-label="Secciones">
-      <button class="tab" id="tab-create" aria-selected="true">
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" id="tab-create" role="tab" aria-selected="true" aria-controls="view-create">
         <span data-icon="brush"></span><span class="tab-label">Crear</span>
       </button>
-      <button class="tab" id="tab-gallery" aria-selected="false">
+      <button class="tab" id="tab-gallery" role="tab" aria-selected="false" aria-controls="view-gallery">
         <span data-icon="clock"></span><span class="tab-label">Galería</span>
       </button>
     </nav>
@@ -240,7 +240,7 @@
   <!-- ══════════════ Modal: imagen ══════════════ -->
   <div class="modal hidden" id="modal-image" role="dialog" aria-modal="true" aria-label="Detalles de la imagen">
     <div class="modal-backdrop" data-close></div>
-    <div class="modal-card modal-image">
+    <div class="modal-card modal-image" tabindex="-1">
       <button class="icon-btn modal-close" data-close title="Cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
       <div class="image-modal-body">
         <div class="img-wrap"><img id="im-img" alt="Imagen generada"></div>
@@ -269,6 +269,7 @@
             <button class="btn" id="im-regenerate"><span data-icon="refresh"></span><span>Regenerar</span></button>
             <button class="btn" id="im-remix"><span data-icon="shuffle"></span><span>Remix</span></button>
             <button class="btn" id="im-reference"><span data-icon="image"></span><span>Usar como referencia</span></button>
+            <button class="btn" id="im-copy-settings" title="Copiar todos los ajustes como JSON"><span data-icon="copy"></span><span>Copiar ajustes</span></button>
             <button class="btn btn-danger" id="im-delete"><span data-icon="trash"></span><span>Eliminar</span></button>
           </div>
         </div>
@@ -279,7 +280,7 @@
   <!-- ══════════════ Modal: ajustes de API ══════════════ -->
   <div class="modal hidden" id="modal-settings" role="dialog" aria-modal="true" aria-label="Ajustes de API">
     <div class="modal-backdrop" data-close></div>
-    <div class="modal-card">
+    <div class="modal-card" tabindex="-1">
       <button class="icon-btn modal-close" data-close title="Cerrar" aria-label="Cerrar"><span data-icon="close"></span></button>
       <h3>⚙ Ajustes de generación</h3>
 

@@ -92,10 +92,20 @@ python3 -m http.server 8080
 
 ## 🌐 Publicar en GitHub Pages
 
-1. Haz push de este repositorio a GitHub.
-2. En el repo: **Settings → Pages → Build and deployment → Source: Deploy from a branch**.
-3. Rama `main`, carpeta `/ (root)`, guarda.
-4. Tu web quedará en `https://tu-usuario.github.io/ImageIA/`.
+Haz push de este repositorio a GitHub y elige **una** de estas dos opciones:
+
+**Opción A · Deploy desde rama (la más simple)**
+
+1. En el repo: **Settings → Pages → Build and deployment → Source: Deploy from a branch**.
+2. Rama `main`, carpeta `/ (root)`, guarda.
+3. Tu web quedará en `https://tu-usuario.github.io/ImageIA/`.
+
+**Opción B · GitHub Actions (automática)**
+
+El repo incluye el workflow `.github/workflows/deploy-pages.yml`:
+
+1. En el repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+2. A partir de ese momento, cada push a `main` despliega la web solo.
 
 No hay paso de build: son archivos estáticos. `.nojekyll` evita que Pages procese los archivos con Jekyll.
 
